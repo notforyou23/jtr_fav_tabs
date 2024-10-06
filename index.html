@@ -1,0 +1,2273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terrapin Station</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            color: #e0e0e0;
+            background: linear-gradient(45deg, #1a1a1a, #2c2c2c);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 70px; /* Add space for the fixed header */
+        }
+        h1, h2 {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            z-index: 1000;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.2em;
+            border: none;
+        }
+        .summary, #userPanel, #mainContent, #sidebar {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .bookmarklet, button {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1em;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .bookmarklet:hover, button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08);
+        }
+        #reloadBtn {
+            background: linear-gradient(45deg, #ff5555, #ff9955);
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+        #reloadBtn:hover {
+            background: linear-gradient(45deg, #ff9955, #ff5555);
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+        }
+        #mainContent {
+            text-align: center;
+            padding: 30px 0;
+        }
+        #randomLinkBtn {
+            font-size: 1.2em;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            background-size: 200% 200%;
+            animation: gradientBG 5s ease infinite;
+        }
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+        #songInfo {
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+        #sidebar {
+            width: 100%;
+            max-height: 60vh;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar.open {
+            transform: translateY(0);
+        }
+        #searchInput {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+        }
+        .song-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+        }
+        .song-item:nth-child(even) {
+            background: rgba(255,255,255,0.08);
+        }
+        .song-item a {
+            text-decoration: none;
+            color: #00ffff;
+        }
+        .song-item a:hover {
+            text-decoration: underline;
+        }
+        #mainView {
+            display: none;
+        }
+        .sort-btn {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-right: 10px;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+        .sort-btn:hover {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+        }
+        #toggleSidebar {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+        }
+        a {
+            color: #00ffff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+                padding-top: 60px;
+            }
+            .header h1 {
+                font-size: 1em;
+            }
+            .bookmarklet, button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+            #randomLinkBtn {
+                font-size: 1em;
+                padding: 12px 24px;
+            }
+            #reloadBtn {
+                padding: 6px 12px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>~Randomize your Favorites | Free your Tabs | If you get confused listen to the music play... ~</h1>
+        <button id="reloadBtn">Reload</button>
+    </div>
+
+    <div class="container">
+        <div id="instructions" class="summary">
+            <h2>Quick Summary of Steps</h2>
+            <ol>
+                <li><strong>Add Bookmark to Favorites:</strong> Drag the below link to your bookmarks/favorites bar. Works easiest there.
+                <p><a class="bookmarklet" href="javascript:(function() {
+                    var artist = undefined;
+                    var songData = [...document.querySelectorAll('.LQUZJ')].map(item => {
+                      let artistElement = item.querySelector('.aPPf7.jtEAE.lBssT');
+                      let titleElement = item.querySelector('.aPPf7.HT3w5.lBssT');
+                      if (artistElement) {
+                        artist = artistElement.innerText;
+                      }
+                      if (!artist || !titleElement) return;
+                      return {
+                        artist: artist,
+                        title: titleElement.innerText,
+                        link: titleElement.getAttribute('href'),
+                      };
+                    }).filter(item => item);
+                    var jsonOutput = JSON.stringify(songData, null, 2);
+                    var textArea = document.createElement('textarea');
+                    textArea.value = jsonOutput;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Success, my dude.  Your UG favorites has now copied to the clipboard! Go back and Paste it into the text area and click &quot;Load Favorites&quot;.');
+                  })();">Copy UG Fav Tabs to Clipboard</a></p></li>
+                <li><strong>Use the Bookmarklet:</strong> Remember, <strong>come back to this page after you finish this step!</strong>  Go to your <a href="https://www.ultimate-guitar.com/user/mytabs" target="_blank" rel="noopener noreferrer">Ultimate Guitar My Tabs page</a>. Once there (and logged in), click on the Bookmark you added above, and wait for the pop-up.  Click ok and then come back here...</li>
+                <li><strong>Paste Data:</strong> Clicking that bookmark link will copy your list of favorites to the clipboard (you'll get a pop-up saying so). <p>Paste that into the text box below, and press "Load Favorites".</p></li>
+            </ol>
+        </div>
+
+        <div id="initialView">
+            <textarea id="jsonInput" placeholder="Paste your favorites JSON here..."></textarea>
+            <div class="button-group">
+                <button id="loadNewSetBtn">Load New Set</button>
+                <button id="loadDefaultsBtn">Load JTR Favs</button>
+                <button id="loadBothBtn">Load Both</button>
+            </div>
+        </div>
+
+        <div id="mainView">
+            <div id="mainContent">
+                <button id="randomLinkBtn">Select a Random Tab</button>
+                <div id="songInfo"></div>
+                <div id="actionButtons" style="display: none;">
+                    <button id="openLinkBtn">Open in New Tab</button>
+                    <button id="selectAgainBtn">Select Again</button>
+                </div>
+            </div>
+
+            <button id="toggleSidebar">Toggle Song List</button>
+
+            <div id="sidebar">
+                <h2>Your Favorites</h2>
+                <input type="text" id="searchInput" placeholder="Search by artist or title...">
+                <div>
+                    <button class="sort-btn" data-sort="artist">Sort by Artist</button>
+                    <button class="sort-btn" data-sort="title">Sort by Title</button>
+                </div>
+                <div id="songList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let randomItem = null;
+        let songData = [];
+        let currentSort = { key: null, order: 'asc' };
+    
+        // Function to load JTR favs (replace this with actual data)
+        function loadJTRFavs() {
+            return [
+            {
+              "artist": "Flogging Molly",
+              "title": "If I Ever Leave This World Alive",
+              "link": "https://tabs.ultimate-guitar.com/tab/flogging-molly/if-i-ever-leave-this-world-alive-chords-55063"
+            },
+            {
+              "artist": "Bob Weir",
+              "title": "Gonesville",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-weir/gonesville-chords-1873611"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Glory Days",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/glory-days-chords-792494"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Born To Run (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/born-to-run-chords-1706073"
+            },
+            {
+              "artist": "Peaches",
+              "title": "Fuck The Pain Away",
+              "link": "https://tabs.ultimate-guitar.com/tab/peaches/fuck-the-pain-away-chords-4156840"
+            },
+            {
+              "artist": "Tom Waits",
+              "title": "Picture In A Frame (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-waits/picture-in-a-frame-chords-1114744"
+            },
+            {
+              "artist": "Zach Bryan",
+              "title": "Nine Ball",
+              "link": "https://tabs.ultimate-guitar.com/tab/zach-bryan/nine-ball-chords-4962838"
+            },
+            {
+              "artist": "The Allman Brothers Band",
+              "title": "Melissa",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-allman-brothers-band/melissa-chords-125171"
+            },
+            {
+              "artist": "Elvis Presley",
+              "title": "Burning Love",
+              "link": "https://tabs.ultimate-guitar.com/tab/elvis-presley/burning-love-chords-79685"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Althea",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/althea-chords-12298"
+            },
+            {
+              "artist": "The Waterboys",
+              "title": "Fishermans Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-waterboys/fishermans-blues-chords-383812"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Black",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/black-chords-758251"
+            },
+            {
+              "artist": "Colter Wall",
+              "title": "Kate Mccannon",
+              "link": "https://tabs.ultimate-guitar.com/tab/colter-wall/kate-mccannon-chords-1997499"
+            },
+            {
+              "artist": "The Beat (The English Beat)",
+              "title": "Save It For Later",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beat-the-english-beat/save-it-for-later-chords-67811"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Smile",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/smile-chords-3103724"
+            },
+            {
+              "artist": "Nick Drake",
+              "title": "Pink Moon (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/nick-drake/pink-moon-chords-1773206"
+            },
+            {
+              "artist": "The Rolling Stones",
+              "title": "Paint It Black",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-rolling-stones/paint-it-black-chords-606572"
+            },
+            {
+              "artist": "The Rolling Stones",
+              "title": "Sympathy For The Devil (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-rolling-stones/sympathy-for-the-devil-chords-1088589"
+            },
+            {
+              "artist": "Willie Nelson",
+              "title": "Just Dropped In To See What Condition My Condition Was In",
+              "link": "https://tabs.ultimate-guitar.com/user/tab/view?h=ggVJEFxQaa7lhC2gXHIbxc2o"
+            },
+            {
+              "artist": "Eddie Vedder",
+              "title": "Hide Your Love Away (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/eddie-vedder/hide-your-love-away-chords-133838"
+            },
+            {
+              "artist": "Cat Stevens (Yusuf Islam)",
+              "title": "Moonshadow (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/cat-stevens-yusuf-islam/moonshadow-chords-2636253"
+            },
+            {
+              "artist": "John Lennon",
+              "title": "Working Class Hero",
+              "link": "https://tabs.ultimate-guitar.com/tab/john-lennon/working-class-hero-chords-9344"
+            },
+            {
+              "artist": "Zach Bryan",
+              "title": "Revival",
+              "link": "https://tabs.ultimate-guitar.com/tab/zach-bryan/revival-chords-2907779"
+            },
+            {
+              "artist": "Shaboozey",
+              "title": "A Bar Song Tipsy",
+              "link": "https://tabs.ultimate-guitar.com/tab/shaboozey/a-bar-song-tipsy-chords-5223882"
+            },
+            {
+              "artist": "John Craigie",
+              "title": "Live With Less",
+              "link": "https://tabs.ultimate-guitar.com/tab/john-craigie/live-with-less-chords-4371401"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Red Mosquito",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/red-mosquito-chords-952372"
+            },
+            {
+              "artist": "Willie Nelson",
+              "title": "Rainbow Connection",
+              "link": "https://tabs.ultimate-guitar.com/tab/willie-nelson/rainbow-connection-chords-917303"
+            },
+            {
+              "artist": "Jethro Tull",
+              "title": "Locomotive Breath",
+              "link": "https://tabs.ultimate-guitar.com/tab/jethro-tull/locomotive-breath-chords-10664"
+            },
+            {
+              "artist": "Cat Stevens (Yusuf Islam)",
+              "title": "Where Do The Children Play (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/cat-stevens-yusuf-islam/where-do-the-children-play-chords-1055879"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Hurt (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/hurt-chords-431603"
+            },
+            {
+              "artist": "Willie Nelson",
+              "title": "Just Dropped In To See What Condition My Condition Was In",
+              "link": "https://tabs.ultimate-guitar.com/tab/willie-nelson/just-dropped-in-to-see-what-condition-my-condition-was-in-chords-3981088"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "Buckets Of Rain (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/buckets-of-rain-chords-1463073"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Sugar Magnolia",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/sugar-magnolia-chords-12368"
+            },
+            {
+              "artist": "The Rolling Stones",
+              "title": "Gimme Shelter",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-rolling-stones/gimme-shelter-chords-81103"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Cumberland Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/cumberland-blues-chords-12320"
+            },
+            {
+              "artist": "Adele",
+              "title": "Lovesong",
+              "link": "https://tabs.ultimate-guitar.com/tab/adele/lovesong-chords-1031573"
+            },
+            {
+              "artist": "The Rolling Stones",
+              "title": "You Cant Always Get What You Want (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-rolling-stones/you-cant-always-get-what-you-want-chords-1089344"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "Lay Lady Lay",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/lay-lady-lay-chords-135659"
+            },
+            {
+              "artist": "Old Crow Medicine Show",
+              "title": "Wagon Wheel",
+              "link": "https://tabs.ultimate-guitar.com/tab/old-crow-medicine-show/wagon-wheel-chords-754823"
+            },
+            {
+              "artist": "Marty Robbins",
+              "title": "Big Iron",
+              "link": "https://tabs.ultimate-guitar.com/tab/marty-robbins/big-iron-chords-82067"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Big Iron",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/big-iron-chords-1774663"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Deal (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/deal-chords-1778025"
+            },
+            {
+              "artist": "Billy Strings",
+              "title": "Cocaine Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/billy-strings/cocaine-blues-chords-2984309"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "Help",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/help-chords-17269"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Ring Of Fire (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/ring-of-fire-chords-265004"
+            },
+            {
+              "artist": "Great Big Sea",
+              "title": "Let My Love Open The Door",
+              "link": "https://tabs.ultimate-guitar.com/tab/great-big-sea/let-my-love-open-the-door-chords-1232179"
+            },
+            {
+              "artist": "Nathaniel Rateliff",
+              "title": "I Need Never Get Old",
+              "link": "https://tabs.ultimate-guitar.com/tab/nathaniel-rateliff/i-need-never-get-old-chords-1784937"
+            },
+            {
+              "artist": "Eric Clapton",
+              "title": "Layla (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/eric-clapton/layla-chords-971970"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Scarlet Begonias",
+              "link": "https://tabs.ultimate-guitar.com/user/tab/view?h=CzYB1UUyJ_rqVVFtWIDLx79X"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Truckin (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/truckin-chords-1513629"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Deep Forbidden Lake (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/deep-forbidden-lake-chords-2444149"
+            },
+            {
+              "artist": "Chuck Berry",
+              "title": "Roll Over Beethoven (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/chuck-berry/roll-over-beethoven-chords-668099"
+            },
+            {
+              "artist": "The Band",
+              "title": "The Weight (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-band/the-weight-chords-2064471"
+            },
+            {
+              "artist": "Janis Joplin",
+              "title": "Me And Bobby Mcgee",
+              "link": "https://tabs.ultimate-guitar.com/tab/janis-joplin/me-and-bobby-mcgee-chords-55002"
+            },
+            {
+              "artist": "Louis Armstrong",
+              "title": "What A Wonderful World (ver 9)",
+              "link": "https://tabs.ultimate-guitar.com/tab/louis-armstrong/what-a-wonderful-world-chords-955258"
+            },
+            {
+              "artist": "Metallica",
+              "title": "Nothing Else Matters (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/metallica/nothing-else-matters-chords-830604"
+            },
+            {
+              "artist": "John Lennon",
+              "title": "Happy Xmas War Is Over",
+              "link": "https://tabs.ultimate-guitar.com/tab/john-lennon/happy-xmas-war-is-over-chords-268710"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Mr Soul (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/mr-soul-chords-1464997"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Harvest (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/harvest-chords-1045545"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Powderfinger",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/powderfinger-chords-1746606"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Only Love Can Break Your Heart (ver 9)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/only-love-can-break-your-heart-chords-1742296"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Comes A Time (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/comes-a-time-chords-1119511"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "In My Tree",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/in-my-tree-chords-939260"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Pocahontas (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/pocahontas-chords-663223"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Casey Jones",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/casey-jones-chords-352376"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Scarlet Begonias (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/scarlet-begonias-chords-2539650"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "I Want To Hold Your Hand (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/i-want-to-hold-your-hand-chords-457088"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Corduroy (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/corduroy-chords-1508195"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Big Time (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/big-time-chords-1937961"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Old Man (ver 11)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/old-man-chords-1722766"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Out On The Weekend (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/out-on-the-weekend-chords-1051281"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Cortez The Killer",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/cortez-the-killer-chords-1708123"
+            },
+            {
+              "artist": "The Rolling Stones",
+              "title": "Dead Flowers (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-rolling-stones/dead-flowers-chords-1092199"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Yellow Ledbetter (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/yellow-ledbetter-chords-881944"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "White Line (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/white-line-chords-3226040"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "The Needle And The Damage Done (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/the-needle-and-the-damage-done-chords-2193437"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Wishlist",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/wishlist-chords-1056201"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Cocaine Blues",
+              "link": "https://tabs.ultimate-guitar.com/user/tab/view?h=CkiIMzdmweeWfzad-TN3KEnK"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "I Am Mine (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/i-am-mine-chords-279269"
+            },
+            {
+              "artist": "The Dubliners",
+              "title": "The Fields Of Athenry",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-dubliners/the-fields-of-athenry-chords-334787"
+            },
+            {
+              "artist": "Jerry Jeff Walker",
+              "title": "Mr Bojangles",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-jeff-walker/mr-bojangles-chords-755252"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Rockin In The Free World",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/rockin-in-the-free-world-chords-998144"
+            },
+            {
+              "artist": "Tyler Childers",
+              "title": "Jersey Giant",
+              "link": "https://tabs.ultimate-guitar.com/tab/tyler-childers/jersey-giant-chords-2500998"
+            },
+            {
+              "artist": "Simon & Garfunkel",
+              "title": "The Boxer (ver 6)",
+              "link": "https://tabs.ultimate-guitar.com/tab/simon-garfunkel/the-boxer-chords-1053681"
+            },
+            {
+              "artist": "Nirvana",
+              "title": "Dumb",
+              "link": "https://tabs.ultimate-guitar.com/tab/nirvana/dumb-chords-907179"
+            },
+            {
+              "artist": "Nirvana",
+              "title": "Polly (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/nirvana/polly-chords-832979"
+            },
+            {
+              "artist": "Colter Wall",
+              "title": "Caroline",
+              "link": "https://tabs.ultimate-guitar.com/tab/colter-wall/caroline-chords-2414737"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "New Minglewood Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/new-minglewood-blues-chords-4091782"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Harvest Moon",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/harvest-moon-chords-1444151"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "The River (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/the-river-chords-1708854"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Heart Of Gold (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/heart-of-gold-chords-1737895"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "In Hiding",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/in-hiding-chords-1878463"
+            },
+            {
+              "artist": "The Who",
+              "title": "Squeeze Box (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-who/squeeze-box-chords-1419383"
+            },
+            {
+              "artist": "Oliver Anthony Music",
+              "title": "Rich Men North Of Richmond",
+              "link": "https://tabs.ultimate-guitar.com/tab/oliver-anthony-music/rich-men-north-of-richmond-chords-4909696"
+            },
+            {
+              "artist": "Misc Soundtrack",
+              "title": "Barbie - What Was I Made For",
+              "link": "https://tabs.ultimate-guitar.com/tab/misc-soundtrack/barbie-what-was-i-made-for-chords-4871180"
+            },
+            {
+              "artist": "The Cure",
+              "title": "In Between Days (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-cure/in-between-days-chords-1005012"
+            },
+            {
+              "artist": "Everlast",
+              "title": "Put Your Lights On",
+              "link": "https://tabs.ultimate-guitar.com/tab/everlast/put-your-lights-on-chords-457749"
+            },
+            {
+              "artist": "Elvis Presley",
+              "title": "Thats Alright Mama",
+              "link": "https://tabs.ultimate-guitar.com/tab/elvis-presley/thats-alright-mama-chords-79702"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Goin Down The Road Feeling Bad",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/goin-down-the-road-feeling-bad-chords-363786"
+            },
+            {
+              "artist": "Eddie Vedder",
+              "title": "I Am A Patriot",
+              "link": "https://tabs.ultimate-guitar.com/tab/eddie-vedder/i-am-a-patriot-chords-952918"
+            },
+            {
+              "artist": "Audioslave",
+              "title": "Doesnt Remind Me",
+              "link": "https://tabs.ultimate-guitar.com/tab/audioslave/doesnt-remind-me-chords-980912"
+            },
+            {
+              "artist": "Tony Joe White",
+              "title": "Polk Salad Annie",
+              "link": "https://tabs.ultimate-guitar.com/tab/tony-joe-white/polk-salad-annie-chords-827568"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Hes Gone (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/hes-gone-chords-2860412"
+            },
+            {
+              "artist": "Kenny Rogers",
+              "title": "The Gambler (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/kenny-rogers/the-gambler-chords-627779"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "Eleanor Rigby (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/eleanor-rigby-chords-760029"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Rave On",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/rave-on-chords-354776"
+            },
+            {
+              "artist": "Tom Petty",
+              "title": "Free Fallin",
+              "link": "https://tabs.ultimate-guitar.com/user/tab/view?h=ZhlIIK1OZMwQI1KVTftVlVVg"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Franklins Tower",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/franklins-tower-chords-1136186"
+            },
+            {
+              "artist": "Elvis Presley",
+              "title": "Suspicious Minds (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/elvis-presley/suspicious-minds-chords-2388007"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Sugar Magnolia (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/sugar-magnolia-chords-1867552"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Its So Easy (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/its-so-easy-chords-1087642"
+            },
+            {
+              "artist": "Frank Sinatra",
+              "title": "Fly Me To The Moon (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/frank-sinatra/fly-me-to-the-moon-chords-335196"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "Ob-La-Di Ob-La-Da (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/ob-la-di-ob-la-da-chords-1050947"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Just Breathe (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/just-breathe-chords-875531"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Tennessee Jed",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/tennessee-jed-chords-1454916"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Wharf Rat",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/wharf-rat-chords-281519"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Harvest Moon (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/harvest-moon-chords-2299295"
+            },
+            {
+              "artist": "Colter Wall",
+              "title": "Thirteen Silver Dollars",
+              "link": "https://tabs.ultimate-guitar.com/tab/colter-wall/thirteen-silver-dollars-chords-2201571"
+            },
+            {
+              "artist": "Eddie Vedder",
+              "title": "Hard Sun (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/eddie-vedder/hard-sun-chords-1760627"
+            },
+            {
+              "artist": "Eddie Vedder",
+              "title": "Society",
+              "link": "https://tabs.ultimate-guitar.com/tab/eddie-vedder/society-chords-583331"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Alive (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/alive-chords-357373"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Cold Rain And Snow",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/cold-rain-and-snow-chords-2092929"
+            },
+            {
+              "artist": "Jeff Buckley",
+              "title": "Hallelujah (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/jeff-buckley/hallelujah-chords-198052"
+            },
+            {
+              "artist": "Colter Wall",
+              "title": "The Devil Wears A Suit And Tie (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/colter-wall/the-devil-wears-a-suit-and-tie-chords-1979887"
+            },
+            {
+              "artist": "Chris Stapleton",
+              "title": "Tennessee Whiskey",
+              "link": "https://tabs.ultimate-guitar.com/tab/chris-stapleton/tennessee-whiskey-chords-1741042"
+            },
+            {
+              "artist": "Misc Traditional",
+              "title": "Happy Birthday (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/misc-traditional/happy-birthday-chords-2435107"
+            },
+            {
+              "artist": "Father John Misty",
+              "title": "Chateau Lobby 4 In C For Two Virgins",
+              "link": "https://tabs.ultimate-guitar.com/tab/father-john-misty/chateau-lobby-4-in-c-for-two-virgins-chords-1693470"
+            },
+            {
+              "artist": "Colter Wall",
+              "title": "Motorcycle",
+              "link": "https://tabs.ultimate-guitar.com/tab/colter-wall/motorcycle-chords-1997509"
+            },
+            {
+              "artist": "Barry McGuire",
+              "title": "Eve Of Destruction",
+              "link": "https://tabs.ultimate-guitar.com/tab/barry-mcguire/eve-of-destruction-chords-76353"
+            },
+            {
+              "artist": "Billy Strings",
+              "title": "Dust In A Baggie",
+              "link": "https://tabs.ultimate-guitar.com/tab/billy-strings/dust-in-a-baggie-chords-1792953"
+            },
+            {
+              "artist": "Lynyrd Skynyrd",
+              "title": "Gimme Three Steps",
+              "link": "https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/gimme-three-steps-chords-9362"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Better Man (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/better-man-chords-2247421"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Down By The River (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/down-by-the-river-chords-1044692"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Nothingman (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/nothingman-chords-1177677"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Sugar Mountain (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/sugar-mountain-chords-1088575"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Immortality (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/immortality-chords-529032"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "Dont Think Twice Its All Right (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/dont-think-twice-its-all-right-chords-178850"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Last Exit",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/last-exit-chords-2927207"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Big Railroad Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/big-railroad-blues-chords-2297077"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Cassidy (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/cassidy-chords-1739849"
+            },
+            {
+              "artist": "Cat Stevens (Yusuf Islam)",
+              "title": "Dont Be Shy (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/cat-stevens-yusuf-islam/dont-be-shy-chords-1044458"
+            },
+            {
+              "artist": "Cat Stevens (Yusuf Islam)",
+              "title": "Peace Train (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/cat-stevens-yusuf-islam/peace-train-chords-1747034"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "I Know You Rider",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/i-know-you-rider-chords-1848716"
+            },
+            {
+              "artist": "Lynyrd Skynyrd",
+              "title": "Simple Man (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/simple-man-chords-1496841"
+            },
+            {
+              "artist": "Charlie Worsham",
+              "title": "I Hope Im Stoned When Jesus Takes Me Home",
+              "link": "https://tabs.ultimate-guitar.com/tab/charlie-worsham/i-hope-im-stoned-when-jesus-takes-me-home-chords-2827502"
+            },
+            {
+              "artist": "Radiohead",
+              "title": "Creep",
+              "link": "https://tabs.ultimate-guitar.com/tab/radiohead/creep-chords-4169"
+            },
+            {
+              "artist": "Lynyrd Skynyrd",
+              "title": "Tuesdays Gone",
+              "link": "https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/tuesdays-gone-chords-493878"
+            },
+            {
+              "artist": "Houndmouth",
+              "title": "For No One",
+              "link": "https://tabs.ultimate-guitar.com/tab/houndmouth/for-no-one-chords-1715995"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Peggy-O (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/peggy-o-chords-1854644"
+            },
+            {
+              "artist": "Calexico",
+              "title": "Rambler",
+              "link": "https://tabs.ultimate-guitar.com/tab/calexico/rambler-chords-4357508"
+            },
+            {
+              "artist": "Shovels & Rope",
+              "title": "Stono River Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/shovels-rope/stono-river-blues-chords-1517267"
+            },
+            {
+              "artist": "Susto",
+              "title": "County Line",
+              "link": "https://tabs.ultimate-guitar.com/tab/susto/county-line-chords-1830663"
+            },
+            {
+              "artist": "Langhorne Slim",
+              "title": "The Way We Move",
+              "link": "https://tabs.ultimate-guitar.com/tab/langhorne-slim/the-way-we-move-chords-1491128"
+            },
+            {
+              "artist": "Lynyrd Skynyrd",
+              "title": "The Ballad Of Curtis Loew (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/the-ballad-of-curtis-loew-chords-685055"
+            },
+            {
+              "artist": "Alabama Shakes",
+              "title": "Hold On",
+              "link": "https://tabs.ultimate-guitar.com/tab/alabama-shakes/hold-on-chords-1698502"
+            },
+            {
+              "artist": "Eric Clapton",
+              "title": "Lay Down Sally (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/eric-clapton/lay-down-sally-chords-1403270"
+            },
+            {
+              "artist": "The Shins",
+              "title": "Girl Sailor",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-shins/girl-sailor-chords-3262490"
+            },
+            {
+              "artist": "Otis Redding",
+              "title": "Sittin On The Dock Of The Bay",
+              "link": "https://tabs.ultimate-guitar.com/tab/otis-redding/sittin-on-the-dock-of-the-bay-chords-81840"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Scarlet Begonias",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/scarlet-begonias-chords-12360"
+            },
+            {
+              "artist": "Edward Sharpe and the Magnetic Zeros",
+              "title": "40 Day Dream (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/edward-sharpe-and-the-magnetic-zeros/40-day-dream-chords-1054991"
+            },
+            {
+              "artist": "Edward Sharpe and the Magnetic Zeros",
+              "title": "Home",
+              "link": "https://tabs.ultimate-guitar.com/tab/edward-sharpe-and-the-magnetic-zeros/home-chords-923641"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Personal Jesus (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/personal-jesus-chords-804840"
+            },
+            {
+              "artist": "The Band",
+              "title": "Up On Cripple Creek (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-band/up-on-cripple-creek-chords-951790"
+            },
+            {
+              "artist": "Elvis Presley",
+              "title": "Blue Christmas (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/elvis-presley/blue-christmas-chords-1443011"
+            },
+            {
+              "artist": "Brenda Lee",
+              "title": "Rockin Around The Christmas Tree",
+              "link": "https://tabs.ultimate-guitar.com/tab/brenda-lee/rockin-around-the-christmas-tree-chords-991152"
+            },
+            {
+              "artist": "Misc Christmas",
+              "title": "Rudolph The Red-Nosed Reindeer (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/misc-christmas/rudolph-the-red-nosed-reindeer-chords-1009859"
+            },
+            {
+              "artist": "Misc Christmas",
+              "title": "Feliz Navidad",
+              "link": "https://tabs.ultimate-guitar.com/tab/misc-christmas/feliz-navidad-chords-442344"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Touch Of Grey (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/touch-of-grey-chords-1055204"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Big River",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/big-river-chords-698970"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Mama Tried",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/mama-tried-chords-1518688"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Uncle Johns Band (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/uncle-johns-band-chords-1055464"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Everyday (ver 7)",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/everyday-chords-1510988"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Ring Of Fire",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/ring-of-fire-chords-63352"
+            },
+            {
+              "artist": "Foo Fighters",
+              "title": "Times Like These",
+              "link": "https://tabs.ultimate-guitar.com/tab/foo-fighters/times-like-these-chords-166886"
+            },
+            {
+              "artist": "Everlast",
+              "title": "What Its Like",
+              "link": "https://tabs.ultimate-guitar.com/tab/everlast/what-its-like-chords-1683079"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Love Is A Rose",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/love-is-a-rose-chords-803777"
+            },
+            {
+              "artist": "Crosby, Stills & Nash",
+              "title": "Southern Cross (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/crosby-stills-nash/southern-cross-chords-155049"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Homegrown",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/homegrown-chords-2915882"
+            },
+            {
+              "artist": "Gipsy Kings",
+              "title": "Bamboleo",
+              "link": "https://tabs.ultimate-guitar.com/tab/gipsy-kings/bamboleo-chords-709027"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Sugaree (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/sugaree-chords-419950"
+            },
+            {
+              "artist": "Gipsy Kings",
+              "title": "Baila Me",
+              "link": "https://tabs.ultimate-guitar.com/tab/gipsy-kings/baila-me-chords-699572"
+            },
+            {
+              "artist": "Pink Floyd",
+              "title": "Wish You Were Here",
+              "link": "https://tabs.ultimate-guitar.com/tab/pink-floyd/wish-you-were-here-chords-44555"
+            },
+            {
+              "artist": "Gipsy Kings",
+              "title": "Hotel California",
+              "link": "https://tabs.ultimate-guitar.com/tab/gipsy-kings/hotel-california-chords-1850579"
+            },
+            {
+              "artist": "The Marshall Tucker Band",
+              "title": "Cant You See",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-marshall-tucker-band/cant-you-see-chords-144303"
+            },
+            {
+              "artist": "Creedence Clearwater Revival",
+              "title": "Wholl Stop The Rain",
+              "link": "https://tabs.ultimate-guitar.com/tab/creedence-clearwater-revival/wholl-stop-the-rain-chords-45704"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Friend Of The Devil (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/friend-of-the-devil-chords-1087323"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "New Speedway Boogie (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/new-speedway-boogie-chords-3342308"
+            },
+            {
+              "artist": "Billy Strings",
+              "title": "Must Be Seven",
+              "link": "https://tabs.ultimate-guitar.com/tab/billy-strings/must-be-seven-chords-2850998"
+            },
+            {
+              "artist": "Jerry Garcia",
+              "title": "The Wheel",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia/the-wheel-chords-3319901"
+            },
+            {
+              "artist": "Jerry Garcia Band",
+              "title": "Thats What Love Will Make You Do",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia-band/thats-what-love-will-make-you-do-chords-1944599"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Ripple",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/ripple-chords-462863"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "All Along The Watchtower",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/all-along-the-watchtower-chords-152504"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Glory Days (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/glory-days-chords-1045145"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Beat It On Down The Line",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/beat-it-on-down-the-line-chords-12300"
+            },
+            {
+              "artist": "Jerry Garcia",
+              "title": "Deep Elm Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia/deep-elm-blues-chords-12416"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Me And My Uncle",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/me-and-my-uncle-chords-1149561"
+            },
+            {
+              "artist": "Jerry Garcia Band",
+              "title": "My Sisters And Brothers",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia-band/my-sisters-and-brothers-chords-2113989"
+            },
+            {
+              "artist": "Jerry Garcia",
+              "title": "Shady Grove (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia/shady-grove-chords-2089743"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Dire Wolf",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/dire-wolf-chords-3206063"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Not For You",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/not-for-you-chords-939312"
+            },
+            {
+              "artist": "Billy Strings",
+              "title": "Running",
+              "link": "https://tabs.ultimate-guitar.com/tab/billy-strings/running-chords-2903045"
+            },
+            {
+              "artist": "Billy Strings",
+              "title": "John Henry",
+              "link": "https://tabs.ultimate-guitar.com/tab/billy-strings/john-henry-chords-3286502"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Folsom Prison Blues (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/folsom-prison-blues-chords-811776"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "I Walk The Line (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/i-walk-the-line-chords-278859"
+            },
+            {
+              "artist": "Shawn James",
+              "title": "Thats Life",
+              "link": "https://tabs.ultimate-guitar.com/tab/shawn-james/thats-life-chords-2364665"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Thatll Be The Day (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/thatll-be-the-day-chords-1088593"
+            },
+            {
+              "artist": "Ben E. King",
+              "title": "Stand By Me (ver 7)",
+              "link": "https://tabs.ultimate-guitar.com/tab/ben-e-king/stand-by-me-chords-1724608"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Cocaine Blues (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/cocaine-blues-chords-1786586"
+            },
+            {
+              "artist": "Jerry Garcia",
+              "title": "The Harder They Come",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia/the-harder-they-come-chords-2638902"
+            },
+            {
+              "artist": "Pink Floyd",
+              "title": "Mother (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pink-floyd/mother-chords-544441"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Ohio",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/ohio-chords-88516"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Eyes Of The World (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/eyes-of-the-world-chords-1243003"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Ramble On Rose (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/ramble-on-rose-chords-915535"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Loser",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/loser-chords-681282"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "In My Life (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/in-my-life-chords-531847"
+            },
+            {
+              "artist": "Creedence Clearwater Revival",
+              "title": "Fortunate Son (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/creedence-clearwater-revival/fortunate-son-chords-1045064"
+            },
+            {
+              "artist": "Fugees",
+              "title": "Killing Me Softly",
+              "link": "https://tabs.ultimate-guitar.com/tab/fugees/killing-me-softly-chords-50470"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Off He Goes (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/off-he-goes-chords-1865748"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Cinnamon Girl",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/cinnamon-girl-chords-1044059"
+            },
+            {
+              "artist": "Creedence Clearwater Revival",
+              "title": "Down On The Corner",
+              "link": "https://tabs.ultimate-guitar.com/tab/creedence-clearwater-revival/down-on-the-corner-chords-64057"
+            },
+            {
+              "artist": "Tom Petty",
+              "title": "Wildflowers (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-petty/wildflowers-chords-1091924"
+            },
+            {
+              "artist": "Misc Traditional",
+              "title": "Froggie Went A-Courtin (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/misc-traditional/froggie-went-a-courtin-chords-2245057"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Atlantic City",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/atlantic-city-chords-84414"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "All You Need Is Love (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/all-you-need-is-love-chords-878481"
+            },
+            {
+              "artist": "Nirvana",
+              "title": "Something In The Way (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/nirvana/something-in-the-way-chords-1721385"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Cowgirl In The Sand",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/cowgirl-in-the-sand-chords-1044123"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Nebraska (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/nebraska-chords-442068"
+            },
+            {
+              "artist": "Guns N' Roses",
+              "title": "Patience",
+              "link": "https://tabs.ultimate-guitar.com/tab/guns-n-roses/patience-chords-775751"
+            },
+            {
+              "artist": "The White Stripes",
+              "title": "Were Going To Be Friends (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-white-stripes/were-going-to-be-friends-chords-935201"
+            },
+            {
+              "artist": "Eric Clapton",
+              "title": "Wonderful Tonight",
+              "link": "https://tabs.ultimate-guitar.com/tab/eric-clapton/wonderful-tonight-chords-390046"
+            },
+            {
+              "artist": "Robert Johnson",
+              "title": "Kind Hearted Woman Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/robert-johnson/kind-hearted-woman-blues-chords-2958941"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Maybe Baby (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/maybe-baby-chords-1049624"
+            },
+            {
+              "artist": "Dire Straits",
+              "title": "Sultans Of Swing (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/dire-straits/sultans-of-swing-chords-267976"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "Knockin On Heavens Door (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/knockin-on-heavens-door-chords-66559"
+            },
+            {
+              "artist": "Cat Stevens (Yusuf Islam)",
+              "title": "Wild World (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/cat-stevens-yusuf-islam/wild-world-chords-1828326"
+            },
+            {
+              "artist": "Chris Cornell",
+              "title": "Like A Stone (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/chris-cornell/like-a-stone-chords-1164073"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Stella Blue (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/stella-blue-chords-1739923"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "My Hometown (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/my-hometown-chords-1125062"
+            },
+            {
+              "artist": "Tom Petty and The Heartbreakers",
+              "title": "American Girl (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-petty-and-the-heartbreakers/american-girl-chords-1516572"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "Ob-La-Di Ob-La-Da",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/ob-la-di-ob-la-da-chords-166166"
+            },
+            {
+              "artist": "Tom Petty and The Heartbreakers",
+              "title": "Mary Janes Last Dance (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-petty-and-the-heartbreakers/mary-janes-last-dance-chords-1718613"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Not Fade Away (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/not-fade-away-chords-1050936"
+            },
+            {
+              "artist": "Bob Marley",
+              "title": "Three Little Birds",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-marley/three-little-birds-chords-166605"
+            },
+            {
+              "artist": "Indigo Girls",
+              "title": "Closer To Fine (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/indigo-girls/closer-to-fine-chords-534175"
+            },
+            {
+              "artist": "Bob Marley",
+              "title": "No Woman No Cry",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-marley/no-woman-no-cry-chords-45479"
+            },
+            {
+              "artist": "Indigo Girls",
+              "title": "Galileo (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/indigo-girls/galileo-chords-1156991"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Im On Fire (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/im-on-fire-chords-1718534"
+            },
+            {
+              "artist": "B.B. King",
+              "title": "The Thrill Is Gone (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/b-b-king/the-thrill-is-gone-chords-1761818"
+            },
+            {
+              "artist": "Shawn James",
+              "title": "Aint No Sunshine",
+              "link": "https://tabs.ultimate-guitar.com/tab/shawn-james/aint-no-sunshine-chords-3008750"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Fire On The Mountain",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/fire-on-the-mountain-chords-1456876"
+            },
+            {
+              "artist": "Steve Miller Band",
+              "title": "Abracadabra",
+              "link": "https://tabs.ultimate-guitar.com/tab/steve-miller-band/abracadabra-chords-684035"
+            },
+            {
+              "artist": "Steve Miller Band",
+              "title": "Fly Like An Eagle",
+              "link": "https://tabs.ultimate-guitar.com/tab/steve-miller-band/fly-like-an-eagle-chords-144653"
+            },
+            {
+              "artist": "Steve Miller Band",
+              "title": "The Joker",
+              "link": "https://tabs.ultimate-guitar.com/tab/steve-miller-band/the-joker-chords-84084"
+            },
+            {
+              "artist": "Creedence Clearwater Revival",
+              "title": "Bad Moon Rising",
+              "link": "https://tabs.ultimate-guitar.com/tab/creedence-clearwater-revival/bad-moon-rising-chords-15892"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Oh Boy (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/oh-boy-chords-1050954"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "Here Comes The Sun (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/here-comes-the-sun-chords-566611"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "Norwegian Wood (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/norwegian-wood-chords-1050930"
+            },
+            {
+              "artist": "Eagles",
+              "title": "Hotel California",
+              "link": "https://tabs.ultimate-guitar.com/tab/eagles/hotel-california-chords-46190"
+            },
+            {
+              "artist": "Nirvana",
+              "title": "Smells Like Teen Spirit",
+              "link": "https://tabs.ultimate-guitar.com/tab/nirvana/smells-like-teen-spirit-chords-807883"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Dancing In The Dark (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/dancing-in-the-dark-chords-1087212"
+            },
+            {
+              "artist": "Eddie Vedder",
+              "title": "Far Behind (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/eddie-vedder/far-behind-chords-1465659"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Elderly Woman Behind The Counter In A Small Town (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/elderly-woman-behind-the-counter-in-a-small-town-chords-1231544"
+            },
+            {
+              "artist": "Gregg Allman",
+              "title": "Come And Go Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/gregg-allman/come-and-go-blues-chords-2483208"
+            },
+            {
+              "artist": "George Thorogood & The Destroyers",
+              "title": "Move It On Over",
+              "link": "https://tabs.ultimate-guitar.com/tab/george-thorogood-the-destroyers/move-it-on-over-chords-1457400"
+            },
+            {
+              "artist": "The Rolling Stones",
+              "title": "Start Me Up",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-rolling-stones/start-me-up-chords-264298"
+            },
+            {
+              "artist": "Houndmouth",
+              "title": "Sedona",
+              "link": "https://tabs.ultimate-guitar.com/tab/houndmouth/sedona-chords-1718397"
+            },
+            {
+              "artist": "Eric Clapton",
+              "title": "Walkin Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/eric-clapton/walkin-blues-chords-1994233"
+            },
+            {
+              "artist": "Howlin' Wolf",
+              "title": "Spoonful",
+              "link": "https://tabs.ultimate-guitar.com/tab/howlin-wolf/spoonful-chords-2666298"
+            },
+            {
+              "artist": "Robert Johnson",
+              "title": "Love In Vain",
+              "link": "https://tabs.ultimate-guitar.com/tab/robert-johnson/love-in-vain-chords-1243365"
+            },
+            {
+              "artist": "Robert Johnson",
+              "title": "Crossroad Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/robert-johnson/crossroad-blues-chords-2959199"
+            },
+            {
+              "artist": "Robert Johnson",
+              "title": "32-20 Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/robert-johnson/32-20-blues-chords-2952212"
+            },
+            {
+              "artist": "Robert Johnson",
+              "title": "Stop Breakin Down Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/robert-johnson/stop-breakin-down-blues-chords-3141521"
+            },
+            {
+              "artist": "Robert Johnson",
+              "title": "Sweet Home Chicago",
+              "link": "https://tabs.ultimate-guitar.com/tab/robert-johnson/sweet-home-chicago-chords-125167"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "Hurt",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/hurt-chords-89849"
+            },
+            {
+              "artist": "Shawn James",
+              "title": "Like A Stone",
+              "link": "https://tabs.ultimate-guitar.com/tab/shawn-james/like-a-stone-chords-3220955"
+            },
+            {
+              "artist": "The Cure",
+              "title": "Friday Im In Love",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-cure/friday-im-in-love-chords-101457"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "One More Cup Of Coffee",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/one-more-cup-of-coffee-chords-14911"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "Tangled Up In Blue",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/tangled-up-in-blue-chords-456793"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Hey Hey My My Into The Black (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/hey-hey-my-my-into-the-black-chords-1721232"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "The Times They Are A-Changin",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/the-times-they-are-a-changin-chords-14943"
+            },
+            {
+              "artist": "John Denver",
+              "title": "Leaving On A Jet Plane",
+              "link": "https://tabs.ultimate-guitar.com/tab/john-denver/leaving-on-a-jet-plane-chords-32979"
+            },
+            {
+              "artist": "John Lennon",
+              "title": "Imagine",
+              "link": "https://tabs.ultimate-guitar.com/tab/john-lennon/imagine-chords-798934"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Crazy Mary (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/crazy-mary-chords-113596"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Better Man",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/better-man-chords-900501"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Black (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/black-chords-1115192"
+            },
+            {
+              "artist": "Tom Petty",
+              "title": "Free Fallin (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-petty/free-fallin-chords-513018"
+            },
+            {
+              "artist": "Dropkick Murphys",
+              "title": "Rose Tattoo (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/dropkick-murphys/rose-tattoo-chords-1676981"
+            },
+            {
+              "artist": "Flogging Molly",
+              "title": "Whats Left Of The Flag (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/flogging-molly/whats-left-of-the-flag-chords-686032"
+            },
+            {
+              "artist": "Jerry Garcia Band",
+              "title": "Midnight Moonlight",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia-band/midnight-moonlight-chords-1725558"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "The Wheel",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/the-wheel-chords-12370"
+            },
+            {
+              "artist": "Lynyrd Skynyrd",
+              "title": "Sweet Home Alabama (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/sweet-home-alabama-chords-1053582"
+            },
+            {
+              "artist": "Lynyrd Skynyrd",
+              "title": "Free Bird (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/free-bird-chords-1045075"
+            },
+            {
+              "artist": "Creedence Clearwater Revival",
+              "title": "Lookin Out My Back Door (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/creedence-clearwater-revival/lookin-out-my-back-door-chords-1049255"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "West La Fadeaway",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/west-la-fadeaway-chords-2405139"
+            },
+            {
+              "artist": "Talking Heads",
+              "title": "Stay Up Late (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/talking-heads/stay-up-late-chords-1433771"
+            },
+            {
+              "artist": "Buddy Holly",
+              "title": "Peggy Sue (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/buddy-holly/peggy-sue-chords-61394"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Helpless",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/helpless-chords-3628343"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "After The Gold Rush",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/after-the-gold-rush-chords-56557"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Down By The River",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/down-by-the-river-chords-1782718"
+            },
+            {
+              "artist": "Eddie Vedder",
+              "title": "Hard Sun (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/eddie-vedder/hard-sun-chords-584816"
+            },
+            {
+              "artist": "Elvis Presley",
+              "title": "Hound Dog (ver 5)",
+              "link": "https://tabs.ultimate-guitar.com/tab/elvis-presley/hound-dog-chords-1483989"
+            },
+            {
+              "artist": "Leadbelly",
+              "title": "Where Did You Sleep Last Night",
+              "link": "https://tabs.ultimate-guitar.com/tab/leadbelly/where-did-you-sleep-last-night-chords-3338126"
+            },
+            {
+              "artist": "Nirvana",
+              "title": "Where Did You Sleep Last Night",
+              "link": "https://tabs.ultimate-guitar.com/tab/nirvana/where-did-you-sleep-last-night-chords-47489"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "My Fathers House (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/my-fathers-house-chords-1869130"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Growin Up (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/growin-up-chords-545919"
+            },
+            {
+              "artist": "Creedence Clearwater Revival",
+              "title": "I Heard It Through The Grapevine (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/creedence-clearwater-revival/i-heard-it-through-the-grapevine-chords-1046816"
+            },
+            {
+              "artist": "Harry Styles",
+              "title": "Watermelon Sugar",
+              "link": "https://tabs.ultimate-guitar.com/tab/harry-styles/watermelon-sugar-chords-2901584"
+            },
+            {
+              "artist": "Eric Clapton",
+              "title": "Wonderful Tonight (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/eric-clapton/wonderful-tonight-chords-666288"
+            },
+            {
+              "artist": "Lynyrd Skynyrd",
+              "title": "Simple Man (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/lynyrd-skynyrd/simple-man-chords-1171108"
+            },
+            {
+              "artist": "Billy Squier",
+              "title": "Lonely Is The Night",
+              "link": "https://tabs.ultimate-guitar.com/tab/billy-squier/lonely-is-the-night-chords-1885172"
+            },
+            {
+              "artist": "The White Stripes",
+              "title": "Effect And Cause",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-white-stripes/effect-and-cause-chords-530087"
+            },
+            {
+              "artist": "Pete Townshend",
+              "title": "Let My Love Open The Door",
+              "link": "https://tabs.ultimate-guitar.com/tab/pete-townshend/let-my-love-open-the-door-chords-721042"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Better Man (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/better-man-chords-1504090"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "State Of Love And Trust",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/state-of-love-and-trust-chords-538029"
+            },
+            {
+              "artist": "Jerry Lee Lewis",
+              "title": "Great Balls Of Fire (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-lee-lewis/great-balls-of-fire-chords-104376"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Bertha (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/bertha-chords-1181667"
+            },
+            {
+              "artist": "Jake Bugg",
+              "title": "Lightning Bolt",
+              "link": "https://tabs.ultimate-guitar.com/tab/jake-bugg/lightning-bolt-chords-1156929"
+            },
+            {
+              "artist": "The Lumineers",
+              "title": "Gloria (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-lumineers/gloria-chords-2655897"
+            },
+            {
+              "artist": "Flogging Molly",
+              "title": "Drunken Lullabies (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/flogging-molly/drunken-lullabies-chords-1867807"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Playing In The Band",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/playing-in-the-band-chords-2575101"
+            },
+            {
+              "artist": "Steppenwolf",
+              "title": "Born To Be Wild",
+              "link": "https://tabs.ultimate-guitar.com/tab/steppenwolf/born-to-be-wild-chords-32120"
+            },
+            {
+              "artist": "The Clash",
+              "title": "Should I Stay Or Should I Go (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-clash/should-i-stay-or-should-i-go-chords-1412096"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Run For The Roses",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/run-for-the-roses-chords-12358"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Heart Of Gold",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/heart-of-gold-chords-56555"
+            },
+            {
+              "artist": "Dropkick Murphys",
+              "title": "Fields Of Athenry",
+              "link": "https://tabs.ultimate-guitar.com/tab/dropkick-murphys/fields-of-athenry-chords-53190"
+            },
+            {
+              "artist": "Chuck Berry",
+              "title": "Johnny B Goode (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/chuck-berry/johnny-b-goode-chords-1047996"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "New Speedway Boogie",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/new-speedway-boogie-chords-553544"
+            },
+            {
+              "artist": "Queen",
+              "title": "Fat Bottomed Girls",
+              "link": "https://tabs.ultimate-guitar.com/tab/queen/fat-bottomed-girls-chords-146240"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Last Kiss",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/last-kiss-chords-38269"
+            },
+            {
+              "artist": "The Beatles",
+              "title": "Let It Be (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-beatles/let-it-be-chords-60690"
+            },
+            {
+              "artist": "Neil Young",
+              "title": "Pocahontas (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/neil-young/pocahontas-chords-88530"
+            },
+            {
+              "artist": "4 Non Blondes",
+              "title": "Whats Up (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/4-non-blondes/whats-up-chords-349210"
+            },
+            {
+              "artist": "Jerry Garcia",
+              "title": "Whiskey In The Jar",
+              "link": "https://tabs.ultimate-guitar.com/tab/jerry-garcia/whiskey-in-the-jar-chords-1106995"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Deep Elem Blues",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/deep-elem-blues-chords-2325799"
+            },
+            {
+              "artist": "Tracy Chapman",
+              "title": "Fast Car (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/tracy-chapman/fast-car-chords-1044807"
+            },
+            {
+              "artist": "The Animals",
+              "title": "House Of The Rising Sun",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-animals/house-of-the-rising-sun-chords-18688"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "Mr Tambourine Man (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/mr-tambourine-man-chords-1092233"
+            },
+            {
+              "artist": "Misc Christmas",
+              "title": "Silent Night (ver 4)",
+              "link": "https://tabs.ultimate-guitar.com/tab/misc-christmas/silent-night-chords-1201071"
+            },
+            {
+              "artist": "David Bowie",
+              "title": "Space Oddity",
+              "link": "https://tabs.ultimate-guitar.com/tab/david-bowie/space-oddity-chords-105869"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Box Of Rain",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/box-of-rain-chords-12307"
+            },
+            {
+              "artist": "Violent Femmes",
+              "title": "Blister In The Sun",
+              "link": "https://tabs.ultimate-guitar.com/tab/violent-femmes/blister-in-the-sun-chords-588"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Reason To Believe",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/reason-to-believe-chords-412628"
+            },
+            {
+              "artist": "Audioslave",
+              "title": "I Am The Highway",
+              "link": "https://tabs.ultimate-guitar.com/tab/audioslave/i-am-the-highway-chords-42445"
+            },
+            {
+              "artist": "Cat Stevens (Yusuf Islam)",
+              "title": "Father And Son",
+              "link": "https://tabs.ultimate-guitar.com/tab/cat-stevens-yusuf-islam/father-and-son-chords-84491"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Daughter (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/daughter-chords-1498265"
+            },
+            {
+              "artist": "Chip Taylor",
+              "title": "Angel Of The Morning",
+              "link": "https://tabs.ultimate-guitar.com/tab/chip-taylor/angel-of-the-morning-chords-464890"
+            },
+            {
+              "artist": "Shaggy",
+              "title": "Angel",
+              "link": "https://tabs.ultimate-guitar.com/tab/shaggy/angel-chords-2063"
+            },
+            {
+              "artist": "Nirvana",
+              "title": "About A Girl",
+              "link": "https://tabs.ultimate-guitar.com/tab/nirvana/about-a-girl-chords-77613"
+            },
+            {
+              "artist": "Green Day",
+              "title": "Good Riddance Time Of Your Life",
+              "link": "https://tabs.ultimate-guitar.com/tab/green-day/good-riddance-time-of-your-life-chords-12835"
+            },
+            {
+              "artist": "Jimmy Reed",
+              "title": "Baby What You Want Me To Do",
+              "link": "https://tabs.ultimate-guitar.com/tab/jimmy-reed/baby-what-you-want-me-to-do-chords-986302"
+            },
+            {
+              "artist": "Thin Lizzy",
+              "title": "Whiskey In The Jar (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/thin-lizzy/whiskey-in-the-jar-chords-811918"
+            },
+            {
+              "artist": "Grateful Dead",
+              "title": "Box Of Rain (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/grateful-dead/box-of-rain-chords-1818348"
+            },
+            {
+              "artist": "CAKE",
+              "title": "Aint No Good",
+              "link": "https://tabs.ultimate-guitar.com/tab/cake/aint-no-good-chords-140632"
+            },
+            {
+              "artist": "The Stooges",
+              "title": "I Wanna Be Your Dog",
+              "link": "https://tabs.ultimate-guitar.com/tab/the-stooges/i-wanna-be-your-dog-chords-80077"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Nothing As It Seems",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/nothing-as-it-seems-chords-529021"
+            },
+            {
+              "artist": "Bob Dylan",
+              "title": "Blowin In The Wind",
+              "link": "https://tabs.ultimate-guitar.com/tab/bob-dylan/blowin-in-the-wind-chords-14835"
+            },
+            {
+              "artist": "Elvis Presley",
+              "title": "Blue Suede Shoes (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/elvis-presley/blue-suede-shoes-chords-1043364"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Given To Fly (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/given-to-fly-chords-1496889"
+            },
+            {
+              "artist": "Pearl Jam",
+              "title": "Release",
+              "link": "https://tabs.ultimate-guitar.com/tab/pearl-jam/release-chords-23417"
+            },
+            {
+              "artist": "Tom Petty",
+              "title": "A Higher Place",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-petty/a-higher-place-chords-1213833"
+            },
+            {
+              "artist": "Tom Petty",
+              "title": "Its Good To Be King",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-petty/its-good-to-be-king-chords-79669"
+            },
+            {
+              "artist": "Johnny Cash",
+              "title": "25 Minutes To Go",
+              "link": "https://tabs.ultimate-guitar.com/tab/johnny-cash/25-minutes-to-go-chords-134063"
+            },
+            {
+              "artist": "Bruce Springsteen",
+              "title": "Born To Run (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/bruce-springsteen/born-to-run-chords-1019935"
+            },
+            {
+              "artist": "KT Tunstall",
+              "title": "Black Horse And The Cherry Tree",
+              "link": "https://tabs.ultimate-guitar.com/tab/kt-tunstall/black-horse-and-the-cherry-tree-chords-184056"
+            },
+            {
+              "artist": "Adele",
+              "title": "Rolling In The Deep (ver 2)",
+              "link": "https://tabs.ultimate-guitar.com/tab/adele/rolling-in-the-deep-chords-1023581"
+            },
+            {
+              "artist": "Tom Petty",
+              "title": "Free Fallin (ver 3)",
+              "link": "https://tabs.ultimate-guitar.com/tab/tom-petty/free-fallin-chords-1088488"
+            }
+          ];
+        }
+    
+        function showInitialView() {
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('initialView').style.display = 'block';
+            document.getElementById('mainView').style.display = 'none';
+        }
+    
+        function showMainView() {
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('initialView').style.display = 'none';
+            document.getElementById('mainView').style.display = 'block';
+        }
+    
+        function loadFavorites(loadType) {
+            let newSongData = [];
+            try {
+                if (loadType === 'new' || loadType === 'both') {
+                    const jsonInput = document.getElementById('jsonInput').value;
+                    newSongData = JSON.parse(jsonInput);
+                }
+                if (loadType === 'defaults' || loadType === 'both') {
+                    const jtrFavs = loadJTRFavs();
+                    newSongData = newSongData.concat(jtrFavs);
+                }
+                songData = newSongData;
+                saveFavoritesToLocalStorage();
+                alert('Favorites successfully loaded!');
+                showMainView();
+                filterAndSortSongs();
+            } catch (error) {
+                alert('Invalid JSON format or loading error. Please try again.');
+            }
+        }
+    
+        function saveFavoritesToLocalStorage() {
+            localStorage.setItem('ugFavorites', JSON.stringify(songData));
+        }
+    
+        function loadFavoritesFromLocalStorage() {
+            const savedFavorites = localStorage.getItem('ugFavorites');
+            if (savedFavorites) {
+                songData = JSON.parse(savedFavorites);
+                return true;
+            }
+            return false;
+        }
+    
+        function selectRandomLink() {
+            if (songData.length === 0) {
+                alert('No favorites loaded. Please load your favorites first.');
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * songData.length);
+            randomItem = songData[randomIndex];
+    
+            const songInfo = document.getElementById('songInfo');
+            songInfo.innerHTML = `<p><strong>Artist:</strong> ${randomItem.artist}<br><strong>Title:</strong> ${randomItem.title}</p>`;
+    
+            document.getElementById('actionButtons').style.display = 'block';
+        }
+    
+        function openLink() {
+            if (randomItem) {
+                window.open(randomItem.link, '_blank');
+            }
+        }
+        function filterAndSortSongs() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            let filteredSongs = songData.filter(song =>
+                song.artist.toLowerCase().includes(searchInput) ||
+                song.title.toLowerCase().includes(searchInput)
+            );
+    
+            if (currentSort.key) {
+                filteredSongs.sort((a, b) => {
+                    if (a[currentSort.key] < b[currentSort.key]) return currentSort.order === 'asc' ? -1 : 1;
+                    if (a[currentSort.key] > b[currentSort.key]) return currentSort.order === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+    
+            displaySongList(filteredSongs);
+        }
+    
+        function displaySongList(songs) {
+            const songList = document.getElementById('songList');
+            songList.innerHTML = '';
+            songs.forEach(song => {
+                const songItem = document.createElement('div');
+                songItem.classList.add('song-item');
+                songItem.innerHTML = `
+                    <strong>${song.artist}</strong> - ${song.title}<br>
+                    <a href="${song.link}" target="_blank">Open Tab</a>
+                `;
+                songList.appendChild(songItem);
+            });
+        }
+    
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+    
+        function reloadApp() {
+            if (confirm("Are you sure you want to reload? This will clear all loaded favorites.")) {
+                localStorage.removeItem('ugFavorites');
+                songData = [];
+                document.getElementById('jsonInput').value = '';
+                showInitialView();
+            }
+        }
+    
+        document.getElementById('loadNewSetBtn').addEventListener('click', () => loadFavorites('new'));
+        document.getElementById('loadDefaultsBtn').addEventListener('click', () => loadFavorites('defaults'));
+        document.getElementById('loadBothBtn').addEventListener('click', () => loadFavorites('both'));
+        document.getElementById('randomLinkBtn').addEventListener('click', selectRandomLink);
+        document.getElementById('openLinkBtn').addEventListener('click', openLink);
+        document.getElementById('selectAgainBtn').addEventListener('click', selectRandomLink);
+        document.getElementById('searchInput').addEventListener('input', filterAndSortSongs);
+        document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
+        document.getElementById('reloadBtn').addEventListener('click', reloadApp);
+    
+        document.querySelectorAll('.sort-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const sortKey = this.dataset.sort;
+                if (currentSort.key === sortKey) {
+                    currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.key = sortKey;
+                    currentSort.order = 'asc';
+                }
+                filterAndSortSongs();
+            });
+        });
+    
+        // Check for saved favorites and load the appropriate view
+        window.addEventListener('load', function() {
+            if (loadFavoritesFromLocalStorage()) {
+                showMainView();
+                filterAndSortSongs();
+            } else {
+                showInitialView();
+            }
+        });
+    </script>
+    </body>
+    </html>
